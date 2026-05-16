@@ -3,13 +3,17 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"os"
+	"strings"
+	"sync"
 )
 
 var _ = net.Listen
 var _ = os.Exit
+
+var connMut sync.Mutex
+var conns []net.Conn
 
 func main() {
 	l, err := net.Listen("tcp", "127.0.0.1:6379")
@@ -18,23 +22,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+		}
+
+		go handleConnection(conn)
 	}
+}
+
+func handleConnection(conn net.Conn) {
+	fmt.Printf("New connection from %v\n", conn.RemoteAddr())
 
 	for {
 		line, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
-			log.Fatalf("Error reading line: %s", err.Error())
+			fmt.Printf("Error reading from connection (%s): %s\n", conn.RemoteAddr(), err.Error())
 		}
+
+		line = strings.TrimSuffix(line, "\n")
+		fmt.Printf("MSG (%s): %s\n", conn.RemoteAddr(), line)
 
 		_, err = conn.Write([]byte("+PONG\r\n"))
 		if err != nil {
-			log.Fatalf("Error writing line: %s", err.Error())
+			fmt.Printf("Error writing to connection (%s): %s\n", conn.RemoteAddr(), err.Error())
 		}
-
-		fmt.Println(line)
 	}
 }
