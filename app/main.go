@@ -171,15 +171,15 @@ func readSimpleString(req io.Reader) (string, error) {
 	}
 }
 
-func writeBulkString(req io.Writer, str string) error {
-	strLen := int64(len(str))
-
-	_, err := io.WriteString(req, fmt.Sprintf("$%d\r\n%s\r\n", strLen, str))
-	if err != nil {
-		return err
+func writeBulkString(req io.Writer, str *string) (err error) {
+	if str == nil {
+		_, err = io.WriteString(req, "$-1\r\n")
+	} else {
+		strLen := int64(len(*str))
+		_, err = io.WriteString(req, fmt.Sprintf("$%d\r\n%s\r\n", strLen, *str))
 	}
 
-	return nil
+	return
 }
 
 func readBulkString(req io.Reader) (*[]byte, error) {

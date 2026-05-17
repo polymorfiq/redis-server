@@ -30,7 +30,8 @@ func handleReq(req interface{}, resp io.Writer) error {
 		}
 
 	case cmd == "echo":
-		if err := writeBulkString(resp, strings.Join(args, " ")); err != nil {
+		argStr := strings.Join(args, " ")
+		if err := writeBulkString(resp, &argStr); err != nil {
 			return err
 		}
 
@@ -42,7 +43,15 @@ func handleReq(req interface{}, resp io.Writer) error {
 		}
 
 	case cmd == "get":
-		if err := writeBulkString(resp, saved[args[0]]); err != nil {
+		storedVal, ok := saved[args[0]]
+		var err error
+		if !ok {
+			err = writeBulkString(resp, nil)
+		} else {
+			err = writeBulkString(resp, &storedVal)
+		}
+
+		if err != nil {
 			return err
 		}
 
