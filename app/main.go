@@ -131,6 +131,15 @@ func readRespValue(req io.Reader) (interface{}, error) {
 	}
 }
 
+func writeSimpleString(req io.Writer, str string) error {
+	_, err := io.WriteString(req, fmt.Sprintf("+%s\r\n", str))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readSimpleString(req io.Reader) (string, error) {
 	var strVal strings.Builder
 	var currByte [1]byte
