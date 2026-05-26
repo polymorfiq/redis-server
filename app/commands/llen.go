@@ -29,7 +29,7 @@ func (cmd *LLen) Parse(args []string) error {
 	return nil
 }
 
-func (cmd *LRange) Execute(sess *client.Session) error {
+func (cmd *LLen) Execute(sess *client.Session) error {
 	storage := sess.Storage()
 	curr, exists := storage.Get(cmd.Key)
 	if !exists {
