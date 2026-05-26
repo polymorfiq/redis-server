@@ -56,6 +56,14 @@ func (cmd *LRange) Execute(sess *client.Session) error {
 		return fmt.Errorf("%s is not array (%T)", cmd.Key, curr)
 	}
 
+	if cmd.StartIndex < 0 {
+		cmd.StartIndex = max(len(currArray.Values)-cmd.StartIndex, 0)
+	}
+
+	if cmd.StopIndex < 0 {
+		cmd.StopIndex = max(len(currArray.Values)-cmd.StopIndex, 0)
+	}
+
 	if cmd.StartIndex > len(currArray.Values) || cmd.StartIndex > cmd.StopIndex {
 		return sess.Send(resp.NewArray())
 	}
