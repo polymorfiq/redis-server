@@ -45,3 +45,10 @@ func BulkErrorFromString(content string) *BulkError {
 	err.Contents = []byte(content)
 	return err
 }
+
+func NullBulkString() *BulkString {
+	bulkStr := NewBulkString().(*BulkString)
+	bulkStr.Contents = nil
+
+	return bulkStr
+}

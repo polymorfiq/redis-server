@@ -10,19 +10,29 @@ import (
 )
 
 type Session struct {
-	client  *Client
-	storage *storage_engine.Engine
+	protoVersion int
+	client       *Client
+	storage      *storage_engine.Engine
 }
 
 func NewSession(client *Client, storage *storage_engine.Engine) *Session {
 	return &Session{
-		client:  client,
-		storage: storage,
+		protoVersion: 2,
+		client:       client,
+		storage:      storage,
 	}
 }
 
 func (s *Session) Send(val resp.Value) error {
 	return s.client.Send(val)
+}
+
+func (s *Session) SetProtoVersion(version int) {
+	s.protoVersion = version
+}
+
+func (s *Session) IsRESP3() bool {
+	return s.protoVersion >= 3
 }
 
 func (s *Session) RemoteAddr() net.Addr {

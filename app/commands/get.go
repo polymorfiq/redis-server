@@ -28,8 +28,10 @@ func (cmd *Get) Parse(args []string) error {
 func (cmd *Get) Execute(sess *client.Session) error {
 	storage := sess.Storage()
 	val, exists := storage.Get(cmd.Key)
-	if !exists {
+	if !exists && sess.IsRESP3() {
 		return sess.Send(resp.NewNull())
+	} else if !exists {
+		return sess.Send(resp.NullBulkString())
 	}
 
 	return sess.Send(val)
