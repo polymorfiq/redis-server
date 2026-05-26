@@ -25,13 +25,14 @@ func (v *ExpiringValue) Read(_ io.Reader) error {
 }
 
 func (v *ExpiringValue) WriteTo(w io.Writer) (n int64, err error) {
-	return v.Value().WriteTo(w)
+	val, _ := v.Value()
+	return val.WriteTo(w)
 }
 
-func (v *ExpiringValue) Value() resp.Value {
+func (v *ExpiringValue) Value() (resp.Value, bool) {
 	if v.expiresAt.Before(time.Now()) {
-		return resp.NewNull()
+		return resp.NewNull(), false
 	}
 
-	return v.val
+	return v.val, true
 }

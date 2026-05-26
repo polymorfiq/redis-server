@@ -28,7 +28,16 @@ func (e *Engine) Put(key string, value resp.Value, opts StorageOpts) error {
 
 func (e *Engine) Get(key string) (resp.Value, bool) {
 	val, ok := e.data[key]
-	return val, ok
+	if !ok {
+		return nil, false
+	}
+
+	expVal, mayExpire := val.(*ExpiringValue)
+	if mayExpire {
+		return expVal.Value()
+	}
+
+	return val, true
 }
 
 type StorageOpts struct {
