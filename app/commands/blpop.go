@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -47,58 +48,27 @@ func (cmd *BLPop) Parse(args []string) error {
 func (cmd *BLPop) Execute(sess *client.Session) error {
 	storage := sess.Storage()
 
-	var newVal *resp.Array
-	var popped resp.Value
-	keepLooping := true
-	for keepLooping {
-		curr, exists := storage.Get(cmd.Key)
-		if exists {
-			currArray, isArray := curr.(*resp.Array)
-			if isArray && len(currArray.Values) >= 1 {
-				newVal, popped = cmd.singlePop(currArray)
-				break
-			}
-		}
-
-		ctx := context.Background()
-		if cmd.HasTimeout {
-			ctx, _ = context.WithTimeout(ctx, cmd.Timeout)
-		}
-
-		select {
-		case <-storage.ChangeChannel(cmd.Key):
-			continue
-
-		case <-ctx.Done():
-			newVal = nil
-			popped = resp.NullArray()
-			keepLooping = false
-		}
-
-	}
-
-	if newVal != nil {
-		err := storage.Put(cmd.Key, newVal, storage_engine.StorageOpts{})
-		if err != nil {
+	for {
+		_, popped, err := storage.LPop(cmd.Key)
+		if err != nil && !errors.Is(err, storage_engine.NotArrayError) {
 			return err
 		}
+
+		if popped == nil {
+			ctx := context.Background()
+			if cmd.HasTimeout {
+				ctx, _ = context.WithTimeout(ctx, cmd.Timeout)
+			}
+
+			select {
+			case <-storage.ChangeChannel(cmd.Key):
+				continue
+
+			case <-ctx.Done():
+				return sess.Send(resp.NullArray())
+			}
+		} else {
+			return sess.Send(popped)
+		}
 	}
-
-	return sess.Send(popped)
-}
-
-func (cmd *BLPop) singlePop(currArray *resp.Array) (*resp.Array, resp.Value) {
-	if len(currArray.Values) == 0 {
-		return currArray, resp.NullBulkString()
-	}
-
-	newArray := resp.NewArray().(*resp.Array)
-	popped := currArray.Values[0]
-	if len(currArray.Values) > 1 {
-		newArray.Values = currArray.Values[1:]
-	} else {
-		newArray.Values = nil
-	}
-
-	return newArray, popped
 }
