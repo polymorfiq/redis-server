@@ -44,5 +44,5 @@ func (s *Session) ReadNext() (resp.Value, error) {
 
 func (s *Session) LogError(errStr string) error {
 	log.Println(errStr)
-	return s.Send(resp.BulkStringFromString(errStr))
+	return s.Send(resp.BulkErrorFromString(errStr))
 }
