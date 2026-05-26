@@ -64,6 +64,18 @@ func (cmd *Set) Parse(args []string) error {
 			cmd.EX = ActiveOptionalValue(uint64(exSeconds))
 			idx += 2
 
+		case "px":
+			if isLastArg {
+				return errors.New("option PX expects argument")
+			}
+
+			pxMilli, err := strconv.Atoi(args[idx+1])
+			if err != nil {
+				return err
+			}
+			cmd.PX = ActiveOptionalValue(uint64(pxMilli))
+			idx += 2
+
 		case "exat":
 			if isLastArg {
 				return errors.New("option EXAT expects argument")
@@ -90,6 +102,9 @@ func (cmd *Set) Execute(sess *client.Session) error {
 	storageOpts := storage_engine.StorageOpts{}
 	if cmd.EX.Active {
 		storageOpts.SetExpiresAt(time.Now().Add(time.Duration(cmd.EX.Value) * time.Second))
+	}
+	if cmd.PX.Active {
+		storageOpts.SetExpiresAt(time.Now().Add(time.Duration(cmd.PX.Value) * time.Millisecond))
 	}
 
 	if cmd.EXAT.Active {
