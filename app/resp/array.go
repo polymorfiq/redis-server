@@ -8,6 +8,7 @@ import (
 
 type Array struct {
 	Values []Value
+	IsNull bool
 }
 
 func NewArray() Value {
@@ -41,7 +42,7 @@ func (v *Array) Read(r io.Reader) error {
 }
 
 func (v *Array) WriteTo(w io.Writer) (n int64, err error) {
-	if v.Values == nil {
+	if v.IsNull {
 		written, err := io.WriteString(w, fmt.Sprintf("*-1\r\n"))
 		return int64(written), err
 	}
@@ -72,6 +73,12 @@ func MaybeSimpleString(s string) Value {
 	}
 
 	return SimpleStringFromString(s)
+}
+
+func NullArray() Value {
+	null := NewArray().(*Array)
+	null.IsNull = true
+	return null
 }
 
 func ArrayOfStrings(strs []string) *Array {
