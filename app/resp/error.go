@@ -3,6 +3,7 @@ package resp
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 type Error struct {
@@ -34,6 +35,9 @@ func (v *Error) Error() string {
 }
 
 func ErrorFromString(content string) *Error {
+	content = strings.ReplaceAll(content, "\r", "")
+	content = strings.ReplaceAll(content, "\n", "")
+
 	err := NewError().(*Error)
 	err.Contents = content
 	return err

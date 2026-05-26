@@ -23,6 +23,7 @@ var allCommands = map[string]func() Command{
 	"lpush":  NewLPush,
 	"rpush":  NewRPush,
 	"lpop":   NewLPop,
+	"blpop":  NewBLPop,
 	"llen":   NewLLen,
 	"lrange": NewLRange,
 }
