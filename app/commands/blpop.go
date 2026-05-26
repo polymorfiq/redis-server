@@ -33,13 +33,13 @@ func (cmd *BLPop) Parse(args []string) error {
 
 	cmd.Key = args[0]
 	if len(args) == 2 {
-		timeout, err := strconv.ParseUint(args[1], 10, 64)
+		timeout, err := strconv.ParseFloat(args[1], 64)
 		if err != nil {
 			return fmt.Errorf("BLPOP expects numeric argument")
 		}
 
 		cmd.HasTimeout = timeout > 0
-		cmd.Timeout = time.Duration(timeout) * time.Second
+		cmd.Timeout = time.Duration(timeout*1000) * time.Millisecond
 	}
 
 	return nil
