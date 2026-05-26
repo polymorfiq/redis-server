@@ -44,20 +44,24 @@ func (cmd *Set) Parse(args []string) error {
 
 	cmd.Key = args[0]
 	cmd.Value = resp.BulkStringFromString(args[1])
-	args = args[2:]
+
+	var opts []string
+	if len(args) > 2 {
+		opts = args[2:]
+	}
 
 	idx := 0
-	for idx < len(args) {
-		isLastArg := idx == len(args)-1
+	for idx < len(opts) {
+		isLastArg := idx == len(opts)-1
 
-		optName := strings.ToLower(args[idx])
+		optName := strings.ToLower(opts[idx])
 		switch optName {
 		case "ex":
 			if isLastArg {
 				return errors.New("option EX expects argument")
 			}
 
-			exSeconds, err := strconv.Atoi(args[idx+1])
+			exSeconds, err := strconv.Atoi(opts[idx+1])
 			if err != nil {
 				return err
 			}
@@ -69,7 +73,7 @@ func (cmd *Set) Parse(args []string) error {
 				return errors.New("option PX expects argument")
 			}
 
-			pxMilli, err := strconv.Atoi(args[idx+1])
+			pxMilli, err := strconv.Atoi(opts[idx+1])
 			if err != nil {
 				return err
 			}
@@ -81,7 +85,7 @@ func (cmd *Set) Parse(args []string) error {
 				return errors.New("option EXAT expects argument")
 			}
 
-			expiresAt, err := strconv.Atoi(args[idx+1])
+			expiresAt, err := strconv.Atoi(opts[idx+1])
 			if err != nil {
 				return err
 			}
@@ -89,11 +93,11 @@ func (cmd *Set) Parse(args []string) error {
 			idx += 2
 
 		default:
-			return fmt.Errorf("unkown SET option %s", args[idx])
+			return fmt.Errorf("unkown SET option %s", opts[idx])
 		}
 	}
 
-	return cmd.UnpackOptions(args[2:])
+	return nil
 }
 
 func (cmd *Set) Execute(sess *client.Session) error {
@@ -118,22 +122,4 @@ func (cmd *Set) Execute(sess *client.Session) error {
 	}
 
 	return sess.Send(resp.SimpleStringFromString("OK"))
-}
-
-func (cmd *Set) UnpackOptions(args []string) error {
-	if len(args) == 0 {
-		return nil
-	}
-
-	switch strings.ToLower(args[0]) {
-	case "nx":
-		cmd.NX = OptionalValue[bool]{true, true}
-		args = args[1:]
-	case "xx":
-		cmd.XX = OptionalValue[bool]{true, true}
-	default:
-		return fmt.Errorf("unknown option: %s", args[0])
-	}
-
-	return cmd.UnpackOptions(args)
 }
