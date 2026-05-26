@@ -43,7 +43,7 @@ func (cmd *Set) Parse(args []string) error {
 	}
 
 	cmd.Key = args[0]
-	cmd.Value = resp.BulkStringFromString(args[1])
+	cmd.Value = resp.MaybeSimpleString(args[1])
 	args = args[2:]
 
 	idx := 0
