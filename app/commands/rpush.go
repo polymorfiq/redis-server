@@ -29,7 +29,7 @@ func (cmd *RPush) Parse(args []string) error {
 	cmd.Key = args[0]
 	cmd.Values = make([]resp.Value, 0, len(args[1:]))
 	for i := 1; i < len(args); i++ {
-		cmd.Values = append(cmd.Values, resp.MaybeSimpleString(args[i]))
+		cmd.Values = append(cmd.Values, resp.BulkStringFromString(args[i]))
 	}
 
 	return nil
