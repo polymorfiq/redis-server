@@ -20,6 +20,7 @@ var allCommands = map[string]func() Command{
 	"ping":  NewPing,
 	"hello": NewHello,
 	"echo":  NewEcho,
+	"rpush": NewRPush,
 }
 
 func ParseCommand(cmdArray *resp.Array) (Command, error) {

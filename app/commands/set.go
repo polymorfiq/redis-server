@@ -50,6 +50,10 @@ func (cmd *Set) Parse(args []string) error {
 		opts = args[2:]
 	}
 
+	return cmd.parseOptions(opts)
+}
+
+func (cmd *Set) parseOptions(opts []string) error {
 	idx := 0
 	for idx < len(opts) {
 		isLastArg := idx == len(opts)-1
