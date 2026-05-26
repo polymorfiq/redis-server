@@ -48,6 +48,8 @@ func (cmd *BLPop) Parse(args []string) error {
 func (cmd *BLPop) Execute(sess *client.Session) error {
 	storage := sess.Storage()
 
+	popResp := resp.NewArray().(*resp.Array)
+	popResp.Values = append(popResp.Values, resp.BulkStringFromString(cmd.Key))
 	for {
 		_, popped, err := storage.LPop(cmd.Key)
 		if err != nil && !errors.Is(err, storage_engine.NotArrayError) {
@@ -68,7 +70,8 @@ func (cmd *BLPop) Execute(sess *client.Session) error {
 				return sess.Send(resp.NullArray())
 			}
 		} else {
-			return sess.Send(popped)
+			popResp.Values = append(popResp.Values, popped)
+			return sess.Send(popResp)
 		}
 	}
 }
