@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 
@@ -43,6 +45,11 @@ func handleConnection(session *client.Session) {
 	for {
 		val, err := session.ReadNext()
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				fmt.Printf("Connection ended for %v\n", session.RemoteAddr())
+				break
+			}
+
 			_ = session.LogError(fmt.Sprintf("Error reading from session: %s", err))
 			break
 		}

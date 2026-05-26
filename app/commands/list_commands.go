@@ -36,11 +36,11 @@ func (cmd *ListCommands) Definition() CommandDefinition {
 
 func (cmd *ListCommands) Execute(sess *client.Session) error {
 	cmdList := resp.NewArray().(*resp.Array)
-	cmdList.Values = make([]resp.Value, 0, len(cmd.Definitions))
-
-	for _, cmdDef := range cmd.Definitions {
-		cmdList.Values = append(cmdList.Values, cmdDef.ToRespArray())
-	}
+	//cmdList.Values = make([]resp.Value, 0, len(cmd.Definitions))
+	//
+	//for _, cmdDef := range cmd.Definitions {
+	//	cmdList.Values = append(cmdList.Values, cmdDef.ToRespArray())
+	//}
 
 	return sess.Send(cmdList)
 }

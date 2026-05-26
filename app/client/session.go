@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -44,5 +45,5 @@ func (s *Session) ReadNext() (resp.Value, error) {
 
 func (s *Session) LogError(errStr string) error {
 	log.Println(errStr)
-	return s.Send(resp.BulkErrorFromString(errStr))
+	return s.Send(resp.ErrorFromString(fmt.Sprintf("ERR %s", errStr)))
 }
