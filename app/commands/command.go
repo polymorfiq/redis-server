@@ -15,12 +15,13 @@ type Command interface {
 }
 
 var allCommands = map[string]func() Command{
-	"set":   NewSet,
-	"get":   NewGet,
-	"ping":  NewPing,
-	"hello": NewHello,
-	"echo":  NewEcho,
-	"rpush": NewRPush,
+	"set":    NewSet,
+	"get":    NewGet,
+	"ping":   NewPing,
+	"hello":  NewHello,
+	"echo":   NewEcho,
+	"rpush":  NewRPush,
+	"lrange": NewLRange,
 }
 
 func ParseCommand(cmdArray *resp.Array) (Command, error) {

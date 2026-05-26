@@ -23,7 +23,7 @@ func (cmd *RPush) Definition() CommandDefinition {
 
 func (cmd *RPush) Parse(args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("RPUSH expects at least two arguments")
+		return fmt.Errorf("RPUSH expects at least 2 arguments")
 	}
 
 	cmd.Key = args[0]
@@ -42,7 +42,10 @@ func (cmd *RPush) Execute(sess *client.Session) error {
 		curr = resp.NewArray()
 	}
 
-	currArray := curr.(*resp.Array)
+	currArray, isArray := curr.(*resp.Array)
+	if !isArray {
+		return fmt.Errorf("%s is not array (%T)", cmd.Key, curr)
+	}
 	for _, val := range cmd.Values {
 		currArray.Values = append(currArray.Values, val)
 	}
