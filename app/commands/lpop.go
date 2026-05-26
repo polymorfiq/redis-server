@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/codecrafters-io/redis-starter-go/app/client"
 	"github.com/codecrafters-io/redis-starter-go/app/resp"
@@ -9,11 +10,13 @@ import (
 )
 
 type LPop struct {
-	Key string
+	Key      string
+	NumPop   uint64
+	ArrayPop bool
 }
 
 func NewLPop() Command {
-	return &LPop{}
+	return &LPop{NumPop: 1, ArrayPop: false}
 }
 
 func (cmd *LPop) Definition() CommandDefinition {
@@ -26,6 +29,16 @@ func (cmd *LPop) Parse(args []string) error {
 	}
 
 	cmd.Key = args[0]
+
+	if len(args) > 1 {
+		n, err := strconv.ParseUint(args[1], 10, 64)
+		if err != nil {
+			return fmt.Errorf("LPOP expects numeric argument")
+		}
+
+		cmd.NumPop = n
+		cmd.ArrayPop = true
+	}
 
 	return nil
 }
@@ -42,21 +55,55 @@ func (cmd *LPop) Execute(sess *client.Session) error {
 		return fmt.Errorf("%s is not array (%T)", cmd.Key, curr)
 	}
 
-	if len(currArray.Values) == 0 {
-		return sess.Send(resp.NullBulkString())
-	}
-
-	popped := currArray.Values[0]
-	if len(currArray.Values) > 1 {
-		currArray.Values = currArray.Values[1:]
+	var newVal *resp.Array
+	var popped resp.Value
+	if cmd.ArrayPop {
+		newVal, popped = cmd.bulkPop(currArray, cmd.NumPop)
 	} else {
-		currArray.Values = nil
+		newVal, popped = cmd.singlePop(currArray)
 	}
 
-	err := storage.Put(cmd.Key, currArray, storage_engine.StorageOpts{})
+	err := storage.Put(cmd.Key, newVal, storage_engine.StorageOpts{})
 	if err != nil {
 		return err
 	}
 
 	return sess.Send(popped)
+}
+
+func (cmd *LPop) singlePop(currArray *resp.Array) (*resp.Array, resp.Value) {
+	if len(currArray.Values) == 0 {
+		return currArray, resp.NullBulkString()
+	}
+
+	newArray := resp.NewArray().(*resp.Array)
+	popped := currArray.Values[0]
+	if len(currArray.Values) > 1 {
+		newArray.Values = currArray.Values[1:]
+	} else {
+		newArray.Values = nil
+	}
+
+	return newArray, popped
+}
+
+func (cmd *LPop) bulkPop(currArray *resp.Array, n uint64) (newVal *resp.Array, popped *resp.Array) {
+	if len(currArray.Values) == 0 {
+		return currArray, resp.NewArray().(*resp.Array)
+	}
+
+	if len(currArray.Values) < int(n) {
+		return resp.NewArray().(*resp.Array), currArray
+	}
+
+	popped = resp.NewArray().(*resp.Array)
+	popped.Values = make([]resp.Value, 0, n)
+	for i := uint64(0); i < n; i++ {
+		popped.Values = append(popped.Values, currArray.Values[i])
+	}
+
+	afterPop := resp.NewArray().(*resp.Array)
+	afterPop.Values = currArray.Values[n:]
+
+	return afterPop, popped
 }
